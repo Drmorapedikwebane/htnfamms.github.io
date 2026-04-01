@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+   <title>Checkout</title>
+   <link rel="stylesheet" href="css/bootstrap.css">
+</head>
+
+<body>
+<div class="container mt-5">
+
+   <h2>Checkout</h2>
+
+   <div id="orderDetails"></div>
+
+   <hr>
+
+   <h4>Customer Info</h4>
+   <input type="text" placeholder="Full Name" class="form-control mb-2">
+   <input type="email" placeholder="Email" class="form-control mb-2">
+   <input type="text" placeholder="Phone" class="form-control mb-2">
+
+   <button class="btn btn-success mt-3">Pay Now</button>
+
+</div>
+
+<script>
+   const params = new URLSearchParams(window.location.search);
+
+   const name = params.get("name");
+   const price = parseInt(params.get("price"));
+   const qty = parseInt(params.get("qty"));
+
+   const total = price * qty;
+
+   document.getElementById("orderDetails").innerHTML = `
+      <p><strong>Product:</strong> ${name}</p>
+      <p><strong>Price:</strong> R${price}</p>
+      <p><strong>Quantity:</strong> ${qty}</p>
+      <h4>Total: R${total}</h4>
+   `;
+</script>
+
+</body>
+</html>
