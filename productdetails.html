@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+   <title>Product Details</title>
+   <link rel="stylesheet" href="css/bootstrap.css">
+</head>
+
+<body>
+<div class="container mt-5">
+
+   <div class="row">
+      <div class="col-md-6">
+         <img id="productImg" class="img-fluid" src="">
+      </div>
+
+      <div class="col-md-6">
+         <h2 id="productName"></h2>
+         <h4 id="productPrice"></h4>
+
+         <!-- Quantity -->
+         <div class="mt-3">
+            <label>Quantity:</label>
+            <input type="number" id="qty" value="1" min="1" class="form-control" style="width:100px;">
+         </div>
+
+         <!-- Total -->
+         <h4 class="mt-3">Total: R<span id="totalPrice"></span></h4>
+
+         <!-- Buttons -->
+         <button class="btn btn-dark mt-3" onclick="goToCheckout()">Proceed to Payment</button>
+      </div>
+   </div>
+
+</div>
+
+<script>
+   // Get URL data
+   const params = new URLSearchParams(window.location.search);
+
+   const name = params.get("name");
+   const price = parseInt(params.get("price"));
+   const img = params.get("img");
+
+   // Set product info
+   document.getElementById("productName").innerText = name;
+   document.getElementById("productPrice").innerText = "R" + price;
+   document.getElementById("productImg").src = img;
+
+   // Quantity calculation
+   const qtyInput = document.getElementById("qty");
+   const totalPrice = document.getElementById("totalPrice");
+
+   function updateTotal() {
+      totalPrice.innerText = qtyInput.value * price;
+   }
+
+   qtyInput.addEventListener("input", updateTotal);
+   updateTotal();
+
+   // Go to checkout
+   function goToCheckout() {
+      const qty = qtyInput.value;
+      window.location.href = `checkout.html?name=${name}&price=${price}&qty=${qty}`;
+   }
+</script>
+
+</body>
+</html>
