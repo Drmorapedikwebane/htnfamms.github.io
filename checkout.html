@@ -10,20 +10,29 @@
 
    <h2>Checkout</h2>
 
+   <!-- Order Details -->
    <div id="orderDetails"></div>
 
    <hr>
 
+   <!-- Customer Info -->
    <h4>Customer Info</h4>
-   <input type="text" placeholder="Full Name" class="form-control mb-2">
-   <input type="email" placeholder="Email" class="form-control mb-2">
-   <input type="text" placeholder="Phone" class="form-control mb-2">
+   <input type="text" id="fullname" placeholder="Full Name" class="form-control mb-2">
+   <input type="email" id="email" placeholder="Email" class="form-control mb-2">
+   <input type="text" id="phone" placeholder="Phone" class="form-control mb-2">
 
-   <button class="btn btn-success mt-3">Pay Now</button>
+   <!-- Pay Button -->
+   <button id="pay-button" class="btn btn-success mt-3">
+      Pay Now
+   </button>
 
 </div>
 
+<!-- Yoco SDK -->
+<script src="https://js.yoco.com/sdk/v1/yoco-sdk-web.js"></script>
+
 <script>
+   // Get product details from URL
    const params = new URLSearchParams(window.location.search);
 
    const name = params.get("name");
@@ -32,12 +41,67 @@
 
    const total = price * qty;
 
+   // Show order details
    document.getElementById("orderDetails").innerHTML = `
       <p><strong>Product:</strong> ${name}</p>
       <p><strong>Price:</strong> R${price}</p>
       <p><strong>Quantity:</strong> ${qty}</p>
       <h4>Total: R${total}</h4>
    `;
+
+   // Initialize Yoco
+   var yoco = new window.YocoSDK({
+      publicKey: 'YOUR_PUBLIC_KEY' // 🔴 PUT YOUR KEY HERE
+   });
+
+   // Pay button click
+   document.getElementById('pay-button').addEventListener('click', function () {
+
+      // Get customer info
+      const fullname = document.getElementById("fullname").value;
+      const email = document.getElementById("email").value;
+      const phone = document.getElementById("phone").value;
+
+      // Basic validation
+      if (!fullname || !email || !phone) {
+         alert("Please fill in all customer details.");
+         return;
+      }
+
+      // Open Yoco popup
+      yoco.showPopup({
+         amountInCents: total * 100, // VERY IMPORTANT
+         currency: 'ZAR',
+         name: 'HTN Store',
+         description: name,
+
+         callback: function (result) {
+
+            if (result.error) {
+               alert("❌ Payment failed: " + result.error.message);
+            } else {
+
+               // You can store this later in database
+               alert("✅ Payment successful!");
+
+               // Optional: log details
+               console.log({
+                  product: name,
+                  total: total,
+                  customer: fullname,
+                  email: email,
+                  phone: phone,
+                  token: result.id
+               });
+
+               // Redirect to success page
+               window.location.href = "success.html";
+            }
+
+         }
+      });
+
+   });
 </script>
 
 </body>
