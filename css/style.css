@@ -1134,8 +1134,8 @@ https://preview.hasthemes.com/xoss-preview/xoss/index.html
 
 .cart-badge {
   position: absolute;
-  top: 0;
-  right: 0;
+  top: -5px;
+  right: -10px;
   background: red;
   color: white;
   font-size: 12px;
