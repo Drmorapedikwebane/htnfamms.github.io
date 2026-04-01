@@ -71,9 +71,6 @@ function addToCart(name, price, img) {
 }
 
 
-
-
-
 function updateCartCount() {
    let cart = JSON.parse(localStorage.getItem("cart")) || [];
    let count = cart.length;
@@ -82,8 +79,6 @@ function updateCartCount() {
    if (cartCountElement) {
       cartCountElement.innerText = count;
    }
-}
-   alert("✅ Added to cart");
 }
 
 
