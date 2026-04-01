@@ -64,5 +64,29 @@ function addToCart(name, price, img) {
 
    localStorage.setItem("cart", JSON.stringify(cart));
 
+   // ✅ Update cart count
+   updateCartCount();
+
    alert("✅ Added to cart");
 }
+
+
+
+
+
+function updateCartCount() {
+   let cart = JSON.parse(localStorage.getItem("cart")) || [];
+   let count = cart.length;
+
+   let cartCountElement = document.getElementById("cart-count");
+   if (cartCountElement) {
+      cartCountElement.innerText = count;
+   }
+}
+   alert("✅ Added to cart");
+}
+
+
+document.addEventListener("DOMContentLoaded", function () {
+   updateCartCount();
+});
