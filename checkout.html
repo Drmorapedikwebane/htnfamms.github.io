@@ -32,12 +32,13 @@
 <script src="https://js.yoco.com/sdk/v1/yoco-sdk-web.js"></script>
 
 <script>
-  <script>
+// ✅ GET CART DATA
 const cart = JSON.parse(localStorage.getItem("cart")) || [];
 
 let total = 0;
 let html = "";
 
+// ✅ DISPLAY CART ITEMS
 cart.forEach(item => {
    total += item.price * item.qty;
 
@@ -50,9 +51,54 @@ html += `<h4>Total: R${total}</h4>`;
 
 document.getElementById("orderDetails").innerHTML = html;
 
-// Save total globally for Yoco
-window.cartTotal = total;
-</script>
+// ✅ INITIALIZE YOCO
+var yoco = new window.YocoSDK({
+   publicKey: 'YOUR_PUBLIC_KEY' // 🔴 replace this
+});
+
+// ✅ PAY BUTTON CLICK
+document.getElementById('pay-button').addEventListener('click', function () {
+
+   const fullname = document.getElementById("fullname").value;
+   const email = document.getElementById("email").value;
+   const phone = document.getElementById("phone").value;
+
+   // ✅ VALIDATION
+   if (!fullname || !email || !phone) {
+      alert("Please fill in all details");
+      return;
+   }
+
+   if (cart.length === 0) {
+      alert("Your cart is empty");
+      return;
+   }
+
+   // ✅ YOCO POPUP
+   yoco.showPopup({
+      amountInCents: total * 100,
+      currency: 'ZAR',
+      name: 'HTN Store',
+      description: 'Cart Payment',
+
+      callback: function (result) {
+
+         if (result.error) {
+            alert("❌ Payment failed: " + result.error.message);
+         } else {
+
+            alert("✅ Payment successful!");
+
+            // ✅ CLEAR CART
+            localStorage.removeItem("cart");
+
+            // ✅ REDIRECT
+            window.location.href = "success.html";
+         }
+      }
+   });
+
+});
 </script>
 
 </body>
