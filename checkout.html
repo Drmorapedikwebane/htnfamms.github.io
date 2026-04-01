@@ -32,13 +32,19 @@
 <script src="https://js.yoco.com/sdk/v1/yoco-sdk-web.js"></script>
 
 <script>
-// ✅ GET CART DATA
+// ================= GET CART =================
 const cart = JSON.parse(localStorage.getItem("cart")) || [];
 
 let total = 0;
 let html = "";
 
-// ✅ DISPLAY CART ITEMS
+// ================= EMPTY CART CHECK =================
+if (cart.length === 0) {
+   document.getElementById("orderDetails").innerHTML = "<p>Your cart is empty 🛒</p>";
+   document.getElementById("pay-button").disabled = true;
+}
+
+// ================= DISPLAY ITEMS =================
 cart.forEach(item => {
    total += item.price * item.qty;
 
@@ -51,21 +57,23 @@ html += `<h4>Total: R${total}</h4>`;
 
 document.getElementById("orderDetails").innerHTML = html;
 
-// ✅ INITIALIZE YOCO
+
+// ================= YOCO =================
 var yoco = new window.YocoSDK({
-   publicKey: 'YOUR_PUBLIC_KEY' // 🔴 replace this
+   publicKey: 'YOUR_PUBLIC_KEY' // 🔴 PUT YOUR REAL KEY HERE
 });
 
-// ✅ PAY BUTTON CLICK
+
+// ================= PAYMENT =================
 document.getElementById('pay-button').addEventListener('click', function () {
 
-   const fullname = document.getElementById("fullname").value;
-   const email = document.getElementById("email").value;
-   const phone = document.getElementById("phone").value;
+   const fullname = document.getElementById("fullname").value.trim();
+   const email = document.getElementById("email").value.trim();
+   const phone = document.getElementById("phone").value.trim();
 
    // ✅ VALIDATION
    if (!fullname || !email || !phone) {
-      alert("Please fill in all details");
+      alert("⚠️ Please fill in all details");
       return;
    }
 
@@ -74,7 +82,7 @@ document.getElementById('pay-button').addEventListener('click', function () {
       return;
    }
 
-   // ✅ YOCO POPUP
+   // ================= YOCO POPUP =================
    yoco.showPopup({
       amountInCents: total * 100,
       currency: 'ZAR',
@@ -89,10 +97,31 @@ document.getElementById('pay-button').addEventListener('click', function () {
 
             alert("✅ Payment successful!");
 
-            // ✅ CLEAR CART
+            // ================= CREATE ORDER =================
+            let order = {
+               id: "ORD-" + Date.now(),
+               items: cart,
+               total: total,
+               customer: {
+                  fullname: fullname,
+                  email: email,
+                  phone: phone
+               },
+               date: new Date().toLocaleString()
+            };
+
+            // ================= SAVE ALL ORDERS =================
+            let orders = JSON.parse(localStorage.getItem("orders")) || [];
+            orders.push(order);
+            localStorage.setItem("orders", JSON.stringify(orders));
+
+            // ✅ SAVE LAST ORDER (for success page)
+            localStorage.setItem("lastOrder", JSON.stringify(order));
+
+            // ================= CLEAR CART =================
             localStorage.removeItem("cart");
 
-            // ✅ REDIRECT
+            // ================= REDIRECT =================
             window.location.href = "success.html";
          }
       }
@@ -101,13 +130,10 @@ document.getElementById('pay-button').addEventListener('click', function () {
 });
 </script>
 
-      <script src="js/jquery-3.4.1.min.js"></script>
-      <!-- popper js -->
-      <script src="js/popper.min.js"></script>
-      <!-- bootstrap js -->
-      <script src="js/bootstrap.js"></script>
-      <!-- custom js -->
-      <script src="js/custom.js"></script>
+<script src="js/jquery-3.4.1.min.js"></script>
+<script src="js/popper.min.js"></script>
+<script src="js/bootstrap.js"></script>
+<script src="js/custom.js"></script>
 
 </body>
 </html>
