@@ -44,3 +44,25 @@ function myMap() {
     };
     var map = new google.maps.Map(document.getElementById("googleMap"), mapProp);
 }
+
+
+
+
+
+
+
+function addToCart(name, price, img) {
+
+   let cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+   cart.push({
+      name: name,
+      price: price,
+      img: img,
+      qty: 1
+   });
+
+   localStorage.setItem("cart", JSON.stringify(cart));
+
+   alert("✅ Added to cart");
+}
