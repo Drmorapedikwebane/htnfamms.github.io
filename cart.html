@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+   <title>Cart</title>
+   <link rel="stylesheet" href="css/bootstrap.css">
+</head>
+
+<body>
+<div class="container mt-5">
+
+   <h2>Your Cart</h2>
+
+   <div id="cartItems"></div>
+
+   <h4 class="mt-3">Total: R<span id="total"></span></h4>
+
+   <button class="btn btn-success mt-3" onclick="goToCheckout()">
+      Proceed to Checkout
+   </button>
+
+</div>
+
+<script>
+let cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+let cartHTML = "";
+let total = 0;
+
+cart.forEach((item, index) => {
+   total += item.price * item.qty;
+
+   cartHTML += `
+      <div class="card mb-2 p-2">
+         <div class="row">
+            <div class="col-md-2">
+               <img src="${item.img}" class="img-fluid">
+            </div>
+            <div class="col-md-4">
+               <h5>${item.name}</h5>
+               <p>R${item.price}</p>
+            </div>
+            <div class="col-md-3">
+               <input type="number" value="${item.qty}" min="1"
+                  onchange="updateQty(${index}, this.value)" class="form-control">
+            </div>
+            <div class="col-md-3">
+               <button class="btn btn-danger" onclick="removeItem(${index})">
+                  Remove
+               </button>
+            </div>
+         </div>
+      </div>
+   `;
+});
+
+document.getElementById("cartItems").innerHTML = cartHTML;
+document.getElementById("total").innerText = total;
+
+// Update quantity
+function updateQty(index, qty) {
+   cart[index].qty = parseInt(qty);
+   localStorage.setItem("cart", JSON.stringify(cart));
+   location.reload();
+}
+
+// Remove item
+function removeItem(index) {
+   cart.splice(index, 1);
+   localStorage.setItem("cart", JSON.stringify(cart));
+   location.reload();
+}
+
+// Go to checkout
+function goToCheckout() {
+   window.location.href = "checkout.html";
+}
+</script>
+
+</body>
+</html>
