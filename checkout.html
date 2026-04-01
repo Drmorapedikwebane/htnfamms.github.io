@@ -32,76 +32,27 @@
 <script src="https://js.yoco.com/sdk/v1/yoco-sdk-web.js"></script>
 
 <script>
-   // Get product details from URL
-   const params = new URLSearchParams(window.location.search);
+  <script>
+const cart = JSON.parse(localStorage.getItem("cart")) || [];
 
-   const name = params.get("name");
-   const price = parseInt(params.get("price"));
-   const qty = parseInt(params.get("qty"));
+let total = 0;
+let html = "";
 
-   const total = price * qty;
+cart.forEach(item => {
+   total += item.price * item.qty;
 
-   // Show order details
-   document.getElementById("orderDetails").innerHTML = `
-      <p><strong>Product:</strong> ${name}</p>
-      <p><strong>Price:</strong> R${price}</p>
-      <p><strong>Quantity:</strong> ${qty}</p>
-      <h4>Total: R${total}</h4>
+   html += `
+      <p>${item.name} x ${item.qty} = R${item.price * item.qty}</p>
    `;
+});
 
-   // Initialize Yoco
-   var yoco = new window.YocoSDK({
-      publicKey: 'YOUR_PUBLIC_KEY' // 🔴 PUT YOUR KEY HERE
-   });
+html += `<h4>Total: R${total}</h4>`;
 
-   // Pay button click
-   document.getElementById('pay-button').addEventListener('click', function () {
+document.getElementById("orderDetails").innerHTML = html;
 
-      // Get customer info
-      const fullname = document.getElementById("fullname").value;
-      const email = document.getElementById("email").value;
-      const phone = document.getElementById("phone").value;
-
-      // Basic validation
-      if (!fullname || !email || !phone) {
-         alert("Please fill in all customer details.");
-         return;
-      }
-
-      // Open Yoco popup
-      yoco.showPopup({
-         amountInCents: total * 100, // VERY IMPORTANT
-         currency: 'ZAR',
-         name: 'HTN Store',
-         description: name,
-
-         callback: function (result) {
-
-            if (result.error) {
-               alert("❌ Payment failed: " + result.error.message);
-            } else {
-
-               // You can store this later in database
-               alert("✅ Payment successful!");
-
-               // Optional: log details
-               console.log({
-                  product: name,
-                  total: total,
-                  customer: fullname,
-                  email: email,
-                  phone: phone,
-                  token: result.id
-               });
-
-               // Redirect to success page
-               window.location.href = "success.html";
-            }
-
-         }
-      });
-
-   });
+// Save total globally for Yoco
+window.cartTotal = total;
+</script>
 </script>
 
 </body>
