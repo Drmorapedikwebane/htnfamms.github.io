@@ -131,3 +131,21 @@ function removeItem(index) {
 document.addEventListener("DOMContentLoaded", function () {
    updateCartCount();
 });
+
+
+
+
+
+// After payment success, send email notification
+fetch('https://formspree.io/f/xeozkqnw', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    name: fullname,
+    email: email,
+    phone: phone,
+    orderTotal: total,
+    items: cart.map(item => `${item.name} x${item.qty}`).join(', ')
+  })
+});
+
