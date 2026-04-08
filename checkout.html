@@ -59,11 +59,10 @@ html += `<h4>Total: R${total}</h4>`;
 document.getElementById("orderDetails").innerHTML = html;
 
 
-// ================= YOCO =================
-var yoco = new window.YocoSDK({
-   publicKey: 'pk_live_b5d0154dR4g1BAvf6aa4' // 🔴 PUT YOUR REAL KEY HERE
+// ================= YOCO v2 =================
+var yoco = new window.Yoco({
+   publicKey: 'pk_live_b5d0154dR4g1BAvf6aa4'
 });
-
 
 // ================= PAYMENT =================
 document.getElementById('pay-button').addEventListener('click', function () {
@@ -72,7 +71,6 @@ document.getElementById('pay-button').addEventListener('click', function () {
    const email = document.getElementById("email").value.trim();
    const phone = document.getElementById("phone").value.trim();
 
-   // ✅ VALIDATION
    if (!fullname || !email || !phone) {
       alert("⚠️ Please fill in all details");
       return;
@@ -83,20 +81,41 @@ document.getElementById('pay-button').addEventListener('click', function () {
       return;
    }
 
-   // ================= YOCO POPUP =================
+   // ================= YOCO POPUP (v2) =================
    yoco.showPopup({
       amountInCents: total * 100,
       currency: 'ZAR',
       name: 'HTN Store',
-      description: 'Cart Payment',
+      description: 'Cart Payment'
+   }).then(function(result) {
+      if (result.error) {
+         alert("❌ Payment failed: " + result.error.message);
+      } else {
+         alert("✅ Payment successful!");
 
-      callback: function (result) {
+         let order = {
+            id: "ORD-" + Date.now(),
+            items: cart,
+            total: total,
+            customer: {
+               fullname: fullname,
+               email: email,
+               phone: phone
+            },
+            date: new Date().toLocaleString()
+         };
 
-         if (result.error) {
-            alert("❌ Payment failed: " + result.error.message);
-         } else {
-
-            alert("✅ Payment successful!");
+         let orders = JSON.parse(localStorage.getItem("orders")) || [];
+         orders.push(order);
+         localStorage.setItem("orders", JSON.stringify(orders));
+         localStorage.setItem("lastOrder", JSON.stringify(order));
+         localStorage.removeItem("cart");
+         window.location.href = "success.html";
+      }
+   }).catch(function(error) {
+      alert("❌ Payment failed: " + error.message);
+   });
+});
 
             // ================= CREATE ORDER =================
             let order = {
