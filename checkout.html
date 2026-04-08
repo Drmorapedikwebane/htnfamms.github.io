@@ -38,79 +38,113 @@ const cart = JSON.parse(localStorage.getItem("cart")) || [];
 
 let total = 0;
 let html = "";
+const payButton = document.getElementById("pay-button");
+
+// Debug: Log cart contents
+console.log("Cart loaded. Items:", cart.length);
 
 // ================= EMPTY CART CHECK =================
 if (cart.length === 0) {
    document.getElementById("orderDetails").innerHTML = "<p>Your cart is empty 🛒</p>";
-   document.getElementById("pay-button").disabled = true;
+   if (payButton) payButton.disabled = true;
+} else {
+   // Enable button if cart has items
+   if (payButton) payButton.disabled = false;
 }
 
 // ================= DISPLAY ITEMS =================
-cart.forEach(item => {
-   total += item.price * item.qty;
-   html += `<p>${item.name} x ${item.qty} = R${item.price * item.qty}</p>`;
-});
-
-html += `<h4>Total: R${total}</h4>`;
+if (cart.length > 0) {
+   cart.forEach(item => {
+      // Safety check: ensure price and qty exist
+      const price = item.price || 0;
+      const qty = item.qty || 0;
+      total += price * qty;
+      html += `<p>${item.name || 'Unknown item'} x ${qty} = R${price * qty}</p>`;
+   });
+   html += `<h4>Total: R${total}</h4>`;
+} else {
+   html = "<p>Your cart is empty 🛒</p>";
+}
 document.getElementById("orderDetails").innerHTML = html;
 
 // ================= YOCO v2 =================
-var yoco = new window.Yoco({
-   publicKey: 'pk_live_b5d0154dR4g1BAvf6aa4'
-});
-
-// ================= PAYMENT =================
-document.getElementById('pay-button').addEventListener('click', function () {
-
-   const fullname = document.getElementById("fullname").value.trim();
-   const email = document.getElementById("email").value.trim();
-   const phone = document.getElementById("phone").value.trim();
-
-   if (!fullname || !email || !phone) {
-      alert("⚠️ Please fill in all details");
-      return;
-   }
-
-   if (cart.length === 0) {
-      alert("Your cart is empty");
-      return;
-   }
-
-   // ================= YOCO POPUP (v2) =================
-   yoco.showPopup({
-      amountInCents: total * 100,
-      currency: 'ZAR',
-      name: 'HTN Store',
-      description: 'Cart Payment'
-   }).then(function(result) {
-      if (result.error) {
-         alert("❌ Payment failed: " + result.error.message);
-      } else {
-         alert("✅ Payment successful!");
-
-         let order = {
-            id: "ORD-" + Date.now(),
-            items: cart,
-            total: total,
-            customer: {
-               fullname: fullname,
-               email: email,
-               phone: phone
-            },
-            date: new Date().toLocaleString()
-         };
-
-         let orders = JSON.parse(localStorage.getItem("orders")) || [];
-         orders.push(order);
-         localStorage.setItem("orders", JSON.stringify(orders));
-         localStorage.setItem("lastOrder", JSON.stringify(order));
-         localStorage.removeItem("cart");
-         window.location.href = "success.html";
-      }
-   }).catch(function(error) {
-      alert("❌ Payment failed: " + error.message);
+// Only initialize if pay button exists
+if (payButton) {
+   var yoco = new window.Yoco({
+      publicKey: 'pk_live_b5d0154dR4g1BAvf6aa4'
    });
-});
+
+   // ================= PAYMENT =================
+   payButton.addEventListener('click', function () {
+
+      const fullname = document.getElementById("fullname").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const phone = document.getElementById("phone").value.trim();
+
+      if (!fullname || !email || !phone) {
+         alert("⚠️ Please fill in all details");
+         return;
+      }
+
+      if (cart.length === 0) {
+         alert("Your cart is empty");
+         return;
+      }
+
+      if (total <= 0) {
+         alert("⚠️ Invalid total amount");
+         return;
+      }
+
+      // Disable button to prevent double-click
+      payButton.disabled = true;
+      payButton.textContent = "Processing...";
+
+      // ================= YOCO POPUP (v2) =================
+      yoco.showPopup({
+         amountInCents: total * 100,
+         currency: 'ZAR',
+         name: 'HTN Store',
+         description: 'Cart Payment'
+      }).then(function(result) {
+         // Re-enable button after response
+         payButton.disabled = false;
+         payButton.textContent = "Pay Now";
+
+         if (result.error) {
+            alert("❌ Payment failed: " + result.error.message);
+         } else {
+            alert("✅ Payment successful!");
+
+            let order = {
+               id: "ORD-" + Date.now(),
+               items: cart,
+               total: total,
+               customer: {
+                  fullname: fullname,
+                  email: email,
+                  phone: phone
+               },
+               date: new Date().toLocaleString()
+            };
+
+            let orders = JSON.parse(localStorage.getItem("orders")) || [];
+            orders.push(order);
+            localStorage.setItem("orders", JSON.stringify(orders));
+            localStorage.setItem("lastOrder", JSON.stringify(order));
+            localStorage.removeItem("cart");
+            window.location.href = "success.html";
+         }
+      }).catch(function(error) {
+         // Re-enable button on error
+         payButton.disabled = false;
+         payButton.textContent = "Pay Now";
+         alert("❌ Payment failed: " + error.message);
+      });
+   });
+} else {
+   console.error("Pay button not found!");
+}
 </script>
 
 <script src="js/jquery-3.4.1.min.js"></script>
