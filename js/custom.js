@@ -137,6 +137,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
 // After payment success, send email notification
+// REMOVE or COMMENT THIS ENTIRE BLOCK:
+/*
 fetch('https://formspree.io/f/xeozkqnw', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
@@ -148,4 +150,4 @@ fetch('https://formspree.io/f/xeozkqnw', {
     items: cart.map(item => `${item.name} x${item.qty}`).join(', ')
   })
 });
-
+*/
