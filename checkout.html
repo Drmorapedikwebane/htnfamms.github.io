@@ -25,9 +25,6 @@
 
 </div>
 
-<!-- Yoco SDK v2 (Active and Supported) -->
-<script src="https://js.yoco.com/sdk/v2/yoco.js"></script>
-
 <script>
 // ================= GET CART =================
 const cart = JSON.parse(localStorage.getItem("cart")) || [];
@@ -55,13 +52,8 @@ if (cart.length > 0) {
 }
 document.getElementById("orderDetails").innerHTML = html;
 
-// ================= YOCO v2 =================
+// ================= PAYMENT VIA PHP BACKEND =================
 if (payButton) {
-   var yoco = new window.Yoco({
-      publicKey: 'pk_live_b5d0154dR4g1BAvf6aa4'
-   });
-
-   // ================= PAYMENT =================
    payButton.addEventListener('click', function () {
       const fullname = document.getElementById("fullname").value.trim();
       const email = document.getElementById("email").value.trim();
@@ -77,49 +69,47 @@ if (payButton) {
          return;
       }
 
-      console.log("Opening Yoco popup for amount:", total);
+      if (total <= 0) {
+         alert("⚠️ Invalid total amount");
+         return;
+      }
 
-      // Disable button to prevent double-click
+      // Disable button
       payButton.disabled = true;
       payButton.textContent = "Processing...";
 
-      yoco.showPopup({
-         amountInCents: total * 100,
-         currency: 'ZAR',
-         name: 'HTN Store',
-         description: 'Cart Payment'
-      }).then(function(result) {
-         // Re-enable button
-         payButton.disabled = false;
-         payButton.textContent = "Pay Now";
+      // Save order info temporarily before redirect
+      const pendingOrder = {
+         items: cart,
+         total: total,
+         customer: { fullname, email, phone },
+         date: new Date().toLocaleString()
+      };
+      localStorage.setItem("pendingOrder", JSON.stringify(pendingOrder));
 
-         if (result.error) {
-            alert("❌ Payment failed: " + result.error.message);
+      // Call PHP backend to create Yoco checkout session
+      fetch('create-checkout.php', {
+         method: 'POST',
+         headers: { 'Content-Type': 'application/json' },
+         body: JSON.stringify({ amount: total * 100 })
+      })
+      .then(response => response.json())
+      .then(data => {
+         if (data.redirectUrl) {
+            // Redirect to Yoco payment page
+            window.location.href = data.redirectUrl;
          } else {
-            alert("✅ Payment successful!");
-
-            // Save order locally
-            let order = {
-               id: "ORD-" + Date.now(),
-               items: cart,
-               total: total,
-               customer: { fullname, email, phone },
-               date: new Date().toLocaleString()
-            };
-            let orders = JSON.parse(localStorage.getItem("orders")) || [];
-            orders.push(order);
-            localStorage.setItem("orders", JSON.stringify(orders));
-            localStorage.setItem("lastOrder", JSON.stringify(order));
-            localStorage.removeItem("cart");
-
-            // Redirect to success page
-            window.location.href = "success.html";
+            alert("Payment setup failed: " + (data.error || "Unknown error"));
+            payButton.disabled = false;
+            payButton.textContent = "Pay Now";
+            localStorage.removeItem("pendingOrder");
          }
-      }).catch(function(error) {
-         // Re-enable button on error
+      })
+      .catch(error => {
+         alert("Connection error: " + error.message);
          payButton.disabled = false;
          payButton.textContent = "Pay Now";
-         alert("❌ Payment failed: " + error.message);
+         localStorage.removeItem("pendingOrder");
       });
    });
 }
