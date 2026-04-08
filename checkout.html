@@ -10,73 +10,59 @@
 
    <h2>Checkout</h2>
 
-   <!-- Order Details -->
    <div id="orderDetails"></div>
 
    <hr>
 
-   <!-- Customer Info -->
    <h4>Customer Info</h4>
    <input type="text" id="fullname" placeholder="Full Name" class="form-control mb-2">
    <input type="email" id="email" placeholder="Email" class="form-control mb-2">
    <input type="text" id="phone" placeholder="Phone" class="form-control mb-2">
 
-   <!-- Pay Button -->
    <button id="pay-button" class="btn btn-success mt-3">
       Pay Now
    </button>
 
 </div>
 
-<!-- Yoco SDK -->
-<script src="https://js.yoco.com/sdk/v2/yoco.js"></script>
-<script src="https://js.yoco.com/sdk/v2/helpers.js"></script>
+<!-- Yoco SDK v1 (the one that worked) -->
+<script src="https://js.yoco.com/sdk/v1/yoco-sdk-web.js"></script>
 
 <script>
 // ================= GET CART =================
 const cart = JSON.parse(localStorage.getItem("cart")) || [];
-
 let total = 0;
 let html = "";
 const payButton = document.getElementById("pay-button");
 
-// Debug: Log cart contents
-console.log("Cart loaded. Items:", cart.length);
+console.log("Cart items:", cart.length);
 
 // ================= EMPTY CART CHECK =================
 if (cart.length === 0) {
    document.getElementById("orderDetails").innerHTML = "<p>Your cart is empty 🛒</p>";
    if (payButton) payButton.disabled = true;
 } else {
-   // Enable button if cart has items
    if (payButton) payButton.disabled = false;
 }
 
 // ================= DISPLAY ITEMS =================
 if (cart.length > 0) {
    cart.forEach(item => {
-      // Safety check: ensure price and qty exist
-      const price = item.price || 0;
-      const qty = item.qty || 0;
-      total += price * qty;
-      html += `<p>${item.name || 'Unknown item'} x ${qty} = R${price * qty}</p>`;
+      total += item.price * item.qty;
+      html += `<p>${item.name} x ${item.qty} = R${item.price * item.qty}</p>`;
    });
    html += `<h4>Total: R${total}</h4>`;
-} else {
-   html = "<p>Your cart is empty 🛒</p>";
 }
 document.getElementById("orderDetails").innerHTML = html;
 
-// ================= YOCO v2 =================
-// Only initialize if pay button exists
+// ================= YOCO (v1) =================
+var yoco = new window.YocoSDK({
+   publicKey: 'pk_live_b5d0154dR4g1BAvf6aa4'
+});
+
+// ================= PAYMENT =================
 if (payButton) {
-   var yoco = new window.Yoco({
-      publicKey: 'pk_live_b5d0154dR4g1BAvf6aa4'
-   });
-
-   // ================= PAYMENT =================
    payButton.addEventListener('click', function () {
-
       const fullname = document.getElementById("fullname").value.trim();
       const email = document.getElementById("email").value.trim();
       const phone = document.getElementById("phone").value.trim();
@@ -91,59 +77,39 @@ if (payButton) {
          return;
       }
 
-      if (total <= 0) {
-         alert("⚠️ Invalid total amount");
-         return;
-      }
+      console.log("Opening Yoco popup for amount:", total);
 
-      // Disable button to prevent double-click
-      payButton.disabled = true;
-      payButton.textContent = "Processing...";
-
-      // ================= YOCO POPUP (v2) =================
       yoco.showPopup({
          amountInCents: total * 100,
          currency: 'ZAR',
          name: 'HTN Store',
-         description: 'Cart Payment'
-      }).then(function(result) {
-         // Re-enable button after response
-         payButton.disabled = false;
-         payButton.textContent = "Pay Now";
+         description: 'Cart Payment',
+         callback: function (result) {
+            if (result.error) {
+               alert("❌ Payment failed: " + result.error.message);
+            } else {
+               alert("✅ Payment successful!");
 
-         if (result.error) {
-            alert("❌ Payment failed: " + result.error.message);
-         } else {
-            alert("✅ Payment successful!");
+               // Save order locally
+               let order = {
+                  id: "ORD-" + Date.now(),
+                  items: cart,
+                  total: total,
+                  customer: { fullname, email, phone },
+                  date: new Date().toLocaleString()
+               };
+               let orders = JSON.parse(localStorage.getItem("orders")) || [];
+               orders.push(order);
+               localStorage.setItem("orders", JSON.stringify(orders));
+               localStorage.setItem("lastOrder", JSON.stringify(order));
+               localStorage.removeItem("cart");
 
-            let order = {
-               id: "ORD-" + Date.now(),
-               items: cart,
-               total: total,
-               customer: {
-                  fullname: fullname,
-                  email: email,
-                  phone: phone
-               },
-               date: new Date().toLocaleString()
-            };
-
-            let orders = JSON.parse(localStorage.getItem("orders")) || [];
-            orders.push(order);
-            localStorage.setItem("orders", JSON.stringify(orders));
-            localStorage.setItem("lastOrder", JSON.stringify(order));
-            localStorage.removeItem("cart");
-            window.location.href = "success.html";
+               // Redirect to success page
+               window.location.href = "success.html";
+            }
          }
-      }).catch(function(error) {
-         // Re-enable button on error
-         payButton.disabled = false;
-         payButton.textContent = "Pay Now";
-         alert("❌ Payment failed: " + error.message);
       });
    });
-} else {
-   console.error("Pay button not found!");
 }
 </script>
 
