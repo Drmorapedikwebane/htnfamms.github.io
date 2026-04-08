@@ -25,8 +25,8 @@
 
 </div>
 
-<!-- Yoco SDK v1 (the one that worked) -->
-<script src="https://js.yoco.com/sdk/v1/yoco-sdk-web.js"></script>
+<!-- Yoco SDK v2 (Active and Supported) -->
+<script src="https://js.yoco.com/sdk/v2/yoco.js"></script>
 
 <script>
 // ================= GET CART =================
@@ -55,13 +55,13 @@ if (cart.length > 0) {
 }
 document.getElementById("orderDetails").innerHTML = html;
 
-// ================= YOCO (v1) =================
-var yoco = new window.YocoSDK({
-   publicKey: 'pk_live_b5d0154dR4g1BAvf6aa4'
-});
-
-// ================= PAYMENT =================
+// ================= YOCO v2 =================
 if (payButton) {
+   var yoco = new window.Yoco({
+      publicKey: 'pk_live_b5d0154dR4g1BAvf6aa4'
+   });
+
+   // ================= PAYMENT =================
    payButton.addEventListener('click', function () {
       const fullname = document.getElementById("fullname").value.trim();
       const email = document.getElementById("email").value.trim();
@@ -79,35 +79,47 @@ if (payButton) {
 
       console.log("Opening Yoco popup for amount:", total);
 
+      // Disable button to prevent double-click
+      payButton.disabled = true;
+      payButton.textContent = "Processing...";
+
       yoco.showPopup({
          amountInCents: total * 100,
          currency: 'ZAR',
          name: 'HTN Store',
-         description: 'Cart Payment',
-         callback: function (result) {
-            if (result.error) {
-               alert("❌ Payment failed: " + result.error.message);
-            } else {
-               alert("✅ Payment successful!");
+         description: 'Cart Payment'
+      }).then(function(result) {
+         // Re-enable button
+         payButton.disabled = false;
+         payButton.textContent = "Pay Now";
 
-               // Save order locally
-               let order = {
-                  id: "ORD-" + Date.now(),
-                  items: cart,
-                  total: total,
-                  customer: { fullname, email, phone },
-                  date: new Date().toLocaleString()
-               };
-               let orders = JSON.parse(localStorage.getItem("orders")) || [];
-               orders.push(order);
-               localStorage.setItem("orders", JSON.stringify(orders));
-               localStorage.setItem("lastOrder", JSON.stringify(order));
-               localStorage.removeItem("cart");
+         if (result.error) {
+            alert("❌ Payment failed: " + result.error.message);
+         } else {
+            alert("✅ Payment successful!");
 
-               // Redirect to success page
-               window.location.href = "success.html";
-            }
+            // Save order locally
+            let order = {
+               id: "ORD-" + Date.now(),
+               items: cart,
+               total: total,
+               customer: { fullname, email, phone },
+               date: new Date().toLocaleString()
+            };
+            let orders = JSON.parse(localStorage.getItem("orders")) || [];
+            orders.push(order);
+            localStorage.setItem("orders", JSON.stringify(orders));
+            localStorage.setItem("lastOrder", JSON.stringify(order));
+            localStorage.removeItem("cart");
+
+            // Redirect to success page
+            window.location.href = "success.html";
          }
+      }).catch(function(error) {
+         // Re-enable button on error
+         payButton.disabled = false;
+         payButton.textContent = "Pay Now";
+         alert("❌ Payment failed: " + error.message);
       });
    });
 }
