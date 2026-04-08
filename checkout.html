@@ -48,16 +48,11 @@ if (cart.length === 0) {
 // ================= DISPLAY ITEMS =================
 cart.forEach(item => {
    total += item.price * item.qty;
-
-   html += `
-      <p>${item.name} x ${item.qty} = R${item.price * item.qty}</p>
-   `;
+   html += `<p>${item.name} x ${item.qty} = R${item.price * item.qty}</p>`;
 });
 
 html += `<h4>Total: R${total}</h4>`;
-
 document.getElementById("orderDetails").innerHTML = html;
-
 
 // ================= YOCO v2 =================
 var yoco = new window.Yoco({
@@ -115,38 +110,6 @@ document.getElementById('pay-button').addEventListener('click', function () {
    }).catch(function(error) {
       alert("❌ Payment failed: " + error.message);
    });
-});
-
-            // ================= CREATE ORDER =================
-            let order = {
-               id: "ORD-" + Date.now(),
-               items: cart,
-               total: total,
-               customer: {
-                  fullname: fullname,
-                  email: email,
-                  phone: phone
-               },
-               date: new Date().toLocaleString()
-            };
-
-            // ================= SAVE ALL ORDERS =================
-            let orders = JSON.parse(localStorage.getItem("orders")) || [];
-            orders.push(order);
-            localStorage.setItem("orders", JSON.stringify(orders));
-
-            // ✅ SAVE LAST ORDER (for success page)
-            localStorage.setItem("lastOrder", JSON.stringify(order));
-
-            // ================= CLEAR CART =================
-            localStorage.removeItem("cart");
-
-            // ================= REDIRECT =================
-            window.location.href = "success.html";
-         }
-      }
-   });
-
 });
 </script>
 
