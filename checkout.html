@@ -2,74 +2,138 @@
 <html>
 <head>
    <title>Checkout</title>
-   <link rel="stylesheet" href="css/bootstrap.css">
+   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+   <style>
+      .card-preview {
+         background: #f8f9fa;
+         border-radius: 15px;
+         padding: 20px;
+         margin-top: 20px;
+         border: 1px solid #dee2e6;
+      }
+      .card-icons {
+         font-size: 24px;
+         margin-bottom: 10px;
+      }
+      .success-screen {
+         text-align: center;
+         padding: 50px 20px;
+         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+         border-radius: 15px;
+         color: white;
+      }
+      .success-screen h1 {
+         font-size: 3rem;
+         margin-bottom: 20px;
+      }
+      .success-screen .checkmark {
+         font-size: 80px;
+         margin-bottom: 20px;
+      }
+   </style>
 </head>
 
 <body>
-<div class="container mt-5">
+<div class="container mt-5" id="checkout-container">
+   <div class="row justify-content-center">
+      <div class="col-md-6">
+         <div class="card shadow">
+            <div class="card-body">
+               <h2 class="card-title text-center mb-4">Checkout</h2>
 
-   <h2>Checkout</h2>
+               <!-- Order Details -->
+               <div id="orderDetails" class="alert alert-secondary"></div>
 
-   <div id="orderDetails"></div>
+               <!-- Customer Info -->
+               <h4 class="mt-4">Customer Info</h4>
+               <input type="text" id="fullname" placeholder="Full Name" class="form-control mb-2" required>
+               <input type="email" id="email" placeholder="Email" class="form-control mb-2" required>
+               <input type="text" id="phone" placeholder="Phone" class="form-control mb-2" required>
 
-   <hr>
+               <!-- Card Details (Fake) -->
+               <h4 class="mt-4">Card Details (Demo)</h4>
+               <input type="text" id="card-number" placeholder="Card Number" class="form-control mb-2" value="4111 1111 1111 1111">
+               <div class="row">
+                  <div class="col-6">
+                     <input type="text" id="card-expiry" placeholder="MM/YY" class="form-control mb-2" value="12/28">
+                  </div>
+                  <div class="col-6">
+                     <input type="text" id="card-cvv" placeholder="CVV" class="form-control mb-2" value="123">
+                  </div>
+               </div>
 
-   <h4>Customer Info</h4>
-   <input type="text" id="fullname" placeholder="Full Name" class="form-control mb-2">
-   <input type="email" id="email" placeholder="Email" class="form-control mb-2">
-   <input type="text" id="phone" placeholder="Phone" class="form-control mb-2">
-
-   <button id="pay-button" class="btn btn-success mt-3">
-      Pay Now
-   </button>
-
+               <button id="pay-button" class="btn btn-success w-100 mt-3 py-2">
+                  Pay Now
+               </button>
+            </div>
+         </div>
+      </div>
+   </div>
 </div>
 
-<!-- Yoco SDK -->
-<script src="https://js.yoco.com/sdk/v2/yoco.js"></script>
-
 <script>
-// ================= INIT =================
+// ================= GET CART =================
 const cart = JSON.parse(localStorage.getItem("cart")) || [];
 let total = 0;
 let html = "";
 const payButton = document.getElementById("pay-button");
 
-// ================= EMPTY CART =================
+// ================= EMPTY CART CHECK =================
 if (cart.length === 0) {
-   document.getElementById("orderDetails").innerHTML = "<p>Your cart is empty 🛒</p>";
-   payButton.disabled = true;
+   document.getElementById("orderDetails").innerHTML = "<p class='mb-0'>Your cart is empty 🛒</p>";
+   if (payButton) payButton.disabled = true;
 } else {
-   payButton.disabled = false;
+   if (payButton) payButton.disabled = false;
 }
 
-// ================= DISPLAY CART =================
-cart.forEach(item => {
-   total += item.price * item.qty;
-   html += `<p>${item.name} x ${item.qty} = R${item.price * item.qty}</p>`;
-});
-html += `<h4>Total: R${total}</h4>`;
+// ================= DISPLAY ITEMS =================
+if (cart.length > 0) {
+   cart.forEach(item => {
+      total += item.price * item.qty;
+      html += `<p class='mb-1'>${item.name} x ${item.qty} = R${item.price * item.qty}</p>`;
+   });
+   html += `<hr><h5 class='mt-2'>Total: R${total}</h5>`;
+}
 document.getElementById("orderDetails").innerHTML = html;
 
-// ================= YOCO SETUP =================
-const yoco = new window.Yoco({
-   publicKey: 'pk_live_b5d0154dR4g1BAvf6aa4' // 🔴 USE TEST KEY FIRST
-});
+// ================= FAKE PAYMENT HANDLER =================
+function processFakePayment(fullname, email, phone) {
+   // Simulate payment processing delay
+   return new Promise((resolve, reject) => {
+      setTimeout(() => {
+         // Always succeed for demo
+         resolve({
+            success: true,
+            transactionId: "TXN-" + Date.now(),
+            message: "Payment approved"
+         });
+      }, 1500);
+   });
+}
 
-// ================= PAYMENT =================
-payButton.addEventListener('click', function () {
-
+// ================= PAYMENT BUTTON =================
+payButton.addEventListener('click', async function () {
    const fullname = document.getElementById("fullname").value.trim();
    const email = document.getElementById("email").value.trim();
    const phone = document.getElementById("phone").value.trim();
+   const cardNumber = document.getElementById("card-number").value.trim();
+   const cardExpiry = document.getElementById("card-expiry").value.trim();
+   const cardCvv = document.getElementById("card-cvv").value.trim();
 
+   // Validate customer info
    if (!fullname || !email || !phone) {
-      alert("⚠️ Please fill in all details");
+      alert("⚠️ Please fill in all customer details");
       return;
    }
 
-   if (cart.length === 0 || total <= 0) {
-      alert("⚠️ Invalid cart");
+   // Validate card details (basic)
+   if (!cardNumber || !cardExpiry || !cardCvv) {
+      alert("⚠️ Please fill in all card details");
+      return;
+   }
+
+   if (cart.length === 0) {
+      alert("Your cart is empty");
       return;
    }
 
@@ -77,57 +141,70 @@ payButton.addEventListener('click', function () {
    payButton.disabled = true;
    payButton.textContent = "Processing...";
 
-   console.log("Opening Yoco popup...");
+   try {
+      // Process fake payment
+      const result = await processFakePayment(fullname, email, phone);
 
-   yoco.showPopup({
-      amountInCents: total * 100,
-      currency: 'ZAR',
-      name: 'HTN Store',
-      description: 'Cart Payment',
-
-      callback: function(result) {
-
-         // Re-enable button
+      if (result.success) {
+         // Show success screen
+         const orderId = "ORD-" + Date.now();
+         showSuccessScreen(fullname, total, orderId);
+      } else {
+         alert("❌ Payment failed: " + result.message);
          payButton.disabled = false;
          payButton.textContent = "Pay Now";
-
-         console.log("Yoco result:", result);
-
-         if (result.error) {
-            alert("❌ Payment failed: " + result.error.message);
-            return;
-         }
-
-         // ✅ TEMP SUCCESS (FRONTEND ONLY)
-         alert("✅ Payment successful!");
-
-         // Save order
-         const order = {
-            id: "ORD-" + Date.now(),
-            items: cart,
-            total: total,
-            customer: { fullname, email, phone },
-            date: new Date().toLocaleString()
-         };
-
-         let orders = JSON.parse(localStorage.getItem("orders")) || [];
-         orders.push(order);
-
-         localStorage.setItem("orders", JSON.stringify(orders));
-         localStorage.setItem("lastOrder", JSON.stringify(order));
-
-         // Clear cart
-         localStorage.removeItem("cart");
-
-         // Redirect
-         window.location.href = "success.html";
       }
-   });
-
+   } catch (error) {
+      alert("❌ Payment error: " + error.message);
+      payButton.disabled = false;
+      payButton.textContent = "Pay Now";
+   }
 });
+
+// ================= SUCCESS SCREEN =================
+function showSuccessScreen(fullname, total, orderId) {
+   // Save order
+   let order = {
+      id: orderId,
+      items: cart,
+      total: total,
+      customer: {
+         fullname: fullname,
+         email: document.getElementById("email").value.trim(),
+         phone: document.getElementById("phone").value.trim()
+      },
+      date: new Date().toLocaleString()
+   };
+
+   let orders = JSON.parse(localStorage.getItem("orders")) || [];
+   orders.push(order);
+   localStorage.setItem("orders", JSON.stringify(orders));
+   localStorage.setItem("lastOrder", JSON.stringify(order));
+
+   // Clear cart
+   localStorage.removeItem("cart");
+
+   // Replace checkout with success screen
+   const container = document.getElementById("checkout-container");
+   container.innerHTML = `
+      <div class="row justify-content-center">
+         <div class="col-md-8">
+            <div class="success-screen">
+               <div class="checkmark">✅</div>
+               <h1>Payment Successful!</h1>
+               <p class="lead">Thank you, ${fullname}!</p>
+               <p>Your order total is <strong>R${total}</strong></p>
+               <p>Order ID: ${orderId}</p>
+               <p class="mt-4">A confirmation email has been sent to your inbox.</p>
+               <a href="index.html" class="btn btn-light mt-4">Continue Shopping</a>
+            </div>
+         </div>
+      </div>
+   `;
+}
 </script>
 
-<script src="js/bootstrap.js"></script>
-
+<!-- Bootstrap JS for functionality -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
